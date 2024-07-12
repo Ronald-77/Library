@@ -8,51 +8,67 @@ export default function Create() {
     let [title, setTitle] = useState('');
     let [author, setAuthor] = useState('');
     let [description, setDescription] = useState('');
-    let [newCategory, setNewCategory] = useState('');
-    let [categories, setCategories] = useState([]);
-
+    let [image, setImage] = useState(null);  // State to hold the selected image file
+    let [previewImage, setPreviewImage] = useState('');  // State to hold the preview of the selected image
     let navigate = useNavigate();
-    let { doRequest: setPostData, data: book } = useFetch('http://localhost:3000/books', "POST");
-    let { doRequest: updateBookData } = useFetch(`http://localhost:3000/books/${id}`, "PUT");
-    let { doRequest: fetchBookData, data: fetchedBook } = useFetch(`http://localhost:3000/books/${id}`, "GET");
 
+    // UseFetch hooks for API requests
+    let { doRequest: setPostData, data: book } = useFetch('http://127.0.0.1:4444/book/add', "POST");
+    let { doRequest: updateBookData } = useFetch(`http://127.0.0.1:4444/book/${id}`, "PUT");
+    let { doRequest: fetchBookData, data: fetchedBook } = useFetch(`http://127.0.0.1:4444/book/${id}`, "GET");
+
+    // Fetch book data if editing existing book
     useEffect(() => {
         if (id) {
             fetchBookData();
         }
     }, [id]);
 
+    // Populate form fields with fetched book data
     useEffect(() => {
         if (fetchedBook) {
             setTitle(fetchedBook.title);
             setDescription(fetchedBook.description);
-            setCategories(fetchedBook.categories);
             setAuthor(fetchedBook.author);
+            // Set preview image URL if image exists
+            if (fetchedBook.path) {
+                setPreviewImage(`http://127.0.0.1:4444${fetchedBook.path}`);
+            }
         }
     }, [fetchedBook]);
 
-    let addCategory = (e) => {
-        if (newCategory && categories.includes(newCategory)) {
-            setNewCategory('');
-            return;
+    // Handle image file selection
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewImage(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
-        setCategories(prev => [newCategory, ...prev]);
-        setNewCategory('');
     };
 
-    let handleSubmit = async (e) => {
+    // Handle form submission
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        let data = {
-            title,
-            author,
-            description,
-            categories
-        };
+
+        // Prepare form data
+        let formData = new FormData();
+        formData.append('title', title);
+        formData.append('author', author);
+        formData.append('description', description);
+        if (image) {
+            formData.append('image', image);
+        }
+        
         try {
             if (id) {
-                await updateBookData(data);
+                await updateBookData(formData);
             } else {
-                await setPostData(data);
+                // await setPostData(formData);
+                e.target.submit();
             }
             navigate('/');
         } catch (error) {
@@ -60,19 +76,21 @@ export default function Create() {
             // Optionally, you can handle the error or display a message to the user
         }
     };
-    
 
+    // Navigate back to home page when book creation/update is successful
     useEffect(() => {
         if (book && fetchedBook) {
             navigate('/');
         }
     }, [book, fetchedBook]);
 
+    // Theme context
     let { isDark } = useTheme();
 
     return (
         <div className='h-screen'>
             <form className="w-full max-w-lg mx-auto mt-5" onSubmit={handleSubmit}>
+                {/* Title */}
                 <div className="flex flex-wrap -mx-3 mb-6">
                     <div className="w-full px-3">
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-title">
@@ -81,14 +99,16 @@ export default function Create() {
                         <input value={title} onChange={e => setTitle(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-title" type="text" placeholder="Book Title" />
                     </div>
                 </div>
+                {/* Author */}
                 <div className="flex flex-wrap -mx-3 mb-6">
                     <div className="w-full px-3">
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-title">
                             Author
                         </label>
-                        <input value={author} onChange={e => setAuthor(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-title" type="text" placeholder="Book's author" />
+                        <input value={author.name} onChange={e => setAuthor(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-title" type="text" placeholder="Book's author" />
                     </div>
                 </div>
+                {/* Description */}
                 <div className="flex flex-wrap -mx-3 mb-6">
                     <div className="w-full px-3">
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-description">
@@ -98,27 +118,23 @@ export default function Create() {
                         <p className="text-gray-600 text-xs italic">Make it as long and as crazy as you'd like</p>
                     </div>
                 </div>
+                {/* Image Upload */}
                 <div className="flex flex-wrap -mx-3 mb-6">
                     <div className="w-full px-3">
-                        <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-categories">
-                            Categories
+                        <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-image">
+                            Book Cover Image
                         </label>
-                        <div className="flex items-center space-x-2">
-                            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-categories" type="text" placeholder="Book Category" />
-                            <button type='button' onClick={addCategory} className="bg-primary p-1 rounded-lg mb-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 p-1 text-white">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </button>
+                        <input onChange={handleImageChange} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-image" type="file" accept="image/*" />
+                    </div>
+                    {/* Preview Image */}
+                    {previewImage && (
+                        <div className="w-full px-3 mt-3">
+                            <img src={previewImage} alt="Preview" className="max-w-full h-auto" />
                         </div>
-                    </div>
-                    <div className='flex flex-wrap'>
-                        {categories.map(c => (
-                            <span key={c} className='mx-1 my-1 text-white rounded-full px-2 py-1 text-sm bg-primary'>{c}</span>
-                        ))}
-                    </div>
+                    )}
                 </div>
-                <button className='text-white bg-primary px-3 py-2 rounded-2xl flex justify-center items-center gap-1 w-full'>
+                {/* Submit Button */}
+                <button className='text-white bg-primary px-3 py-2 rounded-2xl flex justify-center items-center gap-1 w-full' type="submit">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>

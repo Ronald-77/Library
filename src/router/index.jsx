@@ -28,6 +28,10 @@ const router = createBrowserRouter([
               path: "/create/:id?",
               element: <Create />
           },
+        //   {
+        //     path: "/author",
+        //     element: <Author />
+        // },
           {
               path: "/search",
               element: <Search />
