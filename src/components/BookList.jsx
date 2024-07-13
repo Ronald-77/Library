@@ -40,7 +40,6 @@ export default function BookList() {
     return <p>{error}</p>;
   }
 
-console.log(books)
   return (
     <div>
       {loading && <p>Loading ...</p>}

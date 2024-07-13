@@ -13,7 +13,6 @@ export default function Create() {
     let navigate = useNavigate();
 
     // UseFetch hooks for API requests
-    let { doRequest: setPostData, data: book } = useFetch('http://127.0.0.1:4444/book/add', "POST");
     let { doRequest: updateBookData } = useFetch(`http://127.0.0.1:4444/book/${id}`, "PUT");
     let { doRequest: fetchBookData, data: fetchedBook } = useFetch(`http://127.0.0.1:4444/book/${id}`, "GET");
 
@@ -29,7 +28,7 @@ export default function Create() {
         if (fetchedBook) {
             setTitle(fetchedBook.title);
             setDescription(fetchedBook.description);
-            setAuthor(fetchedBook.author);
+            setAuthor(fetchedBook.author.name);
             // Set preview image URL if image exists
             if (fetchedBook.path) {
                 setPreviewImage(`http://127.0.0.1:4444${fetchedBook.path}`);
@@ -54,58 +53,51 @@ export default function Create() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Prepare form data
-        let formData = new FormData();
+
+        const formData = new FormData();
         formData.append('title', title);
         formData.append('author', author);
         formData.append('description', description);
         if (image) {
             formData.append('image', image);
         }
-        
-        try {
-            if (id) {
-                await updateBookData(formData);
-            } else {
-                // await setPostData(formData);
-                e.target.submit();
-            }
-            navigate('/');
-        } catch (error) {
-            console.error('Error updating/creating book:', error);
-            // Optionally, you can handle the error or display a message to the user
+
+        if (id) {
+            alert("hehe:3 update loh ma ya ty bu");
+        } else {
+            // Create new book
+            fetch('http://127.0.0.1:4444/book/add', {
+                method: 'POST',
+                headers: {
+                "Auth": "879068e8-460b-428d-a92c-45c33e580349"
+                },
+                body: formData
+            }).then(() => navigate('/'));
         }
     };
-
-    // Navigate back to home page when book creation/update is successful
-    useEffect(() => {
-        if (book && fetchedBook) {
-            navigate('/');
-        }
-    }, [book, fetchedBook]);
 
     // Theme context
     let { isDark } = useTheme();
 
     return (
         <div className='h-screen'>
-            <form className="w-full max-w-lg mx-auto mt-5" onSubmit={handleSubmit}>
+            <form className="w-full max-w-lg mx-auto mt-5" name="book-form" onSubmit={handleSubmit}>
                 {/* Title */}
                 <div className="flex flex-wrap -mx-3 mb-6">
                     <div className="w-full px-3">
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-title">
                             Book Title
                         </label>
-                        <input value={title} onChange={e => setTitle(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-title" type="text" placeholder="Book Title" />
+                        <input value={title} onChange={e => setTitle(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-title" type="text" name="title" placeholder="Book Title" />
                     </div>
                 </div>
                 {/* Author */}
                 <div className="flex flex-wrap -mx-3 mb-6">
                     <div className="w-full px-3">
-                        <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-title">
+                        <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-author">
                             Author
                         </label>
-                        <input value={author.name} onChange={e => setAuthor(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-title" type="text" placeholder="Book's author" />
+                        <input value={author} onChange={e => setAuthor(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-author" type="text" name="author" placeholder="Book's author" />
                     </div>
                 </div>
                 {/* Description */}
@@ -114,7 +106,7 @@ export default function Create() {
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-description">
                             Book Description
                         </label>
-                        <textarea value={description} onChange={e => setDescription(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-description" placeholder="Book Description" />
+                        <textarea value={description} onChange={e => setDescription(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-description" name="description" placeholder="Book Description" />
                         <p className="text-gray-600 text-xs italic">Make it as long and as crazy as you'd like</p>
                     </div>
                 </div>

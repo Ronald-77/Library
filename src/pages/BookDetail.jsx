@@ -17,10 +17,15 @@ export default function BookDetail() {
     }, [bookDetail]);
 
     let borrowBook = (type) => {
+        let key = localStorage.getItem('key')
+        if(!key){
+            alert('You must be logged in to borrow a book');
+            return;
+        }
         fetch(`http://127.0.0.1:4444/book/${type}/${id}`, {
             method: "POST",
             headers: {
-                "Auth": "0aafdc83-d5cb-44d1-94ff-6000e9d2f1d6"
+                "Auth": key
             }
         })
         .then(res => res.json())

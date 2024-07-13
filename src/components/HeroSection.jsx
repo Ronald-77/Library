@@ -1,6 +1,8 @@
 import React from 'react'
+import { Link , useNavigate} from 'react-router-dom'
 
 export default function HeroSection() {
+  let navigate = useNavigate();
   return (
     <div className="p-11 flex justify-center items-center">
         <div className="text-center space-y-2">
@@ -25,12 +27,12 @@ export default function HeroSection() {
               fugiat veniam occaecat fugiat aliqua.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-             <button type="button" onClick={()=>{setShowModal(true)}} className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+             <button type="button" onClick={()=>navigate('/login')} className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                 Login
              </button>
-              <a href="/info" className="text-sm font-semibold leading-6 text-blue-700">
+              <Link to="/register" className="text-sm font-semibold leading-6 text-blue-700">
                 Register <span aria-hidden="true">→</span>
-              </a>
+              </Link>
             </div>
           </div>
         </div>

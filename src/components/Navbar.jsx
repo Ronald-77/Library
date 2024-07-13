@@ -10,8 +10,8 @@ export default function Navbar() {
 
     let [search, setSearch] = useState('');
     let navigate = useNavigate();
-    let [isAdmin,setIsAdmin] = useState(true);
-
+    let [isAdmin,setIsAdmin] = useState(true)
+    
     let handleSearch = (e) => {
         navigate('/?search=' + search);
     }
@@ -37,20 +37,33 @@ export default function Navbar() {
             </li>
             <li className='flex gap-3 items-center'>
 
-                {isAdmin && <Link  to="/create" className="text-white bg-primary px-3 py-2 rounded-2xl flex items-center gap-1">
+                {isAdmin ?
+                <>
+                <Link to="/create" className="text-white bg-primary px-3 py-2 rounded-2xl flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="black" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    <span className='hidden md-custom:block'>Create Book</span>
-                </Link>}
-
+                    <span className='hidden md-custom:block'>Create</span>
+                </Link>
+                
                 <div className="w-11 h-11">
                     <img src={photo} alt="" className='w-full h-full rounded-full'/>
                 </div>
+                </> :
+
+                <button
+                    className='bg-primary text-white px-2 py-1 rounded'
+                    onClick={() => navigate(`/create/${b.id}`)}
+                  >
+                    Log In
+                </button>
+                }
+                
                 <div className='cursor-pointer'>
                     {isDark && <img src={lightIcon} alt="" onClick={()=>{changeTheme('light')}}/> }
                     {!isDark && <img src={darkIcon} alt="" onClick={()=>{changeTheme('dark')}}/>}
                 </div>
+                
             </li>
             
         </ul>
