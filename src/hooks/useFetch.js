@@ -6,52 +6,37 @@ function useFetch(url, method = "GET") {
   let [error, setError] = useState(null);
   let [requestData, setRequestData] = useState(null);
 
-  useEffect(() => {
-    let abortController = new AbortController();
-    let signal = abortController.signal;
+  const fetchData = async () => {
+    setLoading(true);
 
     let options = {
-      signal,
-      method
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
     };
 
-    const fetchData = () => {
-      if (method === "GET" || (method !== "GET" && requestData)) {
-        setLoading(true);
-        if (method !== "GET") {
-          options = {
-            ...options,
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestData)
-          };
-        }
-        fetch(url, options)
-          .then((res) => {
-            if (!res.ok) {
-              throw Error("something went wrong");
-            }
-            return res.json();
-          })
-          .then((data) => {
-            setData(data);
-            setError(null);
-            setLoading(false);
-          })
-          .catch((e) => {
-            setError(e.message);
-            setLoading(false);
-          });
+    if (method !== "GET" && requestData) {
+      options.body = JSON.stringify(requestData);
+    }
+
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw Error("Failed to fetch data");
       }
-    };
+      const data = await response.json();
+      setData(data);
+      setError(null);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
-
-    // Cleanup function
-    return () => {
-      abortController.abort();
-    };
   }, [url, method, requestData]);
 
   const doRequest = (data = null) => {
@@ -65,7 +50,7 @@ function useFetch(url, method = "GET") {
       if (!response.ok) {
         throw Error("Failed to delete item");
       }
-      setData(data.filter(item => item.id !== id));
+      setData(data.filter((item) => item.id !== id)); // Update data after successful delete
       setLoading(false);
     } catch (error) {
       setError(error.message);
@@ -73,7 +58,11 @@ function useFetch(url, method = "GET") {
     }
   };
 
-  return { data, loading, error, doRequest,deleteItem };
+  const refetch = () => {
+    fetchData();
+  };
+
+  return { data, loading, error, refetch, doRequest, deleteItem };
 }
 
 export default useFetch;

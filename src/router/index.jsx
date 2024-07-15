@@ -6,6 +6,8 @@ import Layout from "../pages/layouts/Layout";
 import Create from "../pages/Create";
 import Search from "../pages/Search";
 import BookDetail from "../pages/BookDetail";
+import Register from "../pages/Register";
+import Login from "../pages/Login";
 
 const router = createBrowserRouter([
   {
@@ -27,6 +29,14 @@ const router = createBrowserRouter([
           {
               path: "/create/:id?",
               element: <Create />
+          },
+          {
+            path: "/login",
+            element: <Login/>
+          },
+          {
+            path: "/register",
+            element: <Register/>
           },
           {
               path: "/search",
