@@ -13,7 +13,6 @@ export default function Create() {
     let navigate = useNavigate();
 
     // UseFetch hooks for API requests
-    let { doRequest: updateBookData } = useFetch(`http://127.0.0.1:4444/book/${id}`, "PUT");
     let { doRequest: fetchBookData, data: fetchedBook } = useFetch(`http://127.0.0.1:4444/book/${id}`, "GET");
 
     // Fetch book data if editing existing book
@@ -63,16 +62,30 @@ export default function Create() {
         }
 
         if (id) {
-            alert("hehe:3 update loh ma ya ty bu");
+            // Update existing book
+            fetch(`http://127.0.0.1:4444/book/${id}`, {
+                method: 'PUT',
+                headers: {
+                "Auth": "cb23d25a-1d84-469e-b46c-266884535e50"
+                },
+                body: formData
+            })
+            .then((res)=> res.json())
+            .then((res)=> alert(res.message))
+            .then(() => navigate('/'));
+
         } else {
             // Create new book
             fetch('http://127.0.0.1:4444/book/add', {
                 method: 'POST',
                 headers: {
-                "Auth": "879068e8-460b-428d-a92c-45c33e580349"
+                "Auth": "cb23d25a-1d84-469e-b46c-266884535e50"
                 },
                 body: formData
-            }).then(() => navigate('/'));
+            })
+            .then((res)=> res.json())
+            .then((res)=> alert(res.message))
+            .then(() => navigate('/'));
         }
     };
 
@@ -116,12 +129,12 @@ export default function Create() {
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-image">
                             Book Cover Image
                         </label>
-                        <input onChange={handleImageChange} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-image" type="file" accept="image/*" />
+                        <input onChange={handleImageChange} className={`appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-image" type="file" accept="image/*" `} disabled={id? true : false} />
                     </div>
                     {/* Preview Image */}
                     {previewImage && (
                         <div className="w-full px-3 mt-3">
-                            <img src={previewImage} alt="Preview" className="max-w-full h-auto" />
+                            <img src={previewImage} alt="Preview" className={`max-w-full h-auto ${id ? 'hidden' : ''}`} />
                         </div>
                     )}
                 </div>
