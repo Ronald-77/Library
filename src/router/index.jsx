@@ -8,6 +8,8 @@ import Search from "../pages/Search";
 import BookDetail from "../pages/BookDetail";
 import Register from "../pages/Register";
 import Login from "../pages/Login";
+import Profile from "../pages/Profile";
+import AuthorEdit from "../pages/AuthorEdit";
 
 const router = createBrowserRouter([
   {
@@ -35,8 +37,24 @@ const router = createBrowserRouter([
             element: <Login/>
           },
           {
+            path: "/login/:param",
+            element: <Login/>
+          },
+          {
             path: "/register",
             element: <Register/>
+          },
+          {
+            path: "/profile",
+            element: <Profile />
+          },
+          {
+            path: "/author",
+            element: <AuthorEdit/>
+          },
+          {
+            path: "/author/:id",
+            element: <AuthorEdit/>
           },
           {
               path: "/search",
