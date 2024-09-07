@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import bookImg from "../assets/book.jpg";
 import useFetch from '../hooks/useFetch';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -8,7 +8,7 @@ export default function BookList() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const search = params.get('search');
-  const { data: books, loading, error, deleteItem } = useFetch(`http://127.0.0.1:4444/book${search ? `?q=${search}` : ''}`);
+  const { data: books, loading, error } = useFetch(`http://127.0.0.1:4444/book${search ? `?q=${search}` : ''}`);
   const { isDark } = useTheme();
   const navigate = useNavigate();
 
@@ -27,10 +27,39 @@ export default function BookList() {
     }
   }, [books]);
 
+  useEffect(() => {
+    const user = sessionStorage.getItem('adminKey');
+    if (user) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, []);
+
 
   const handleDelete = async (id) => {
+    const authKey = sessionStorage.getItem('adminKey'); // Retrieve the auth key from sessionStorage
     try {
-      await deleteItem(id);
+      if (!window.confirm('Are you sure you want to delete this book?')) {
+        return;
+      }
+      await fetch(`http://127.0.0.1:4444/book/${id}`, {
+        method: 'DELETE',
+
+        headers: {
+          'Auth': authKey,
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Book deleted successfully');
+          window.location.reload();
+        } else {
+          throw new Error('Failed to delete book');
+        }
+      })
+      ;
     } catch (error) {
       console.error('Error deleting book:', error);
     }
@@ -66,7 +95,7 @@ export default function BookList() {
                   
                 </div>
               </div>
-              {isAdmin && (
+              
                 <div className='bg-primary p-2 flex justify-around'>
                   <button
                     className='bg-green-500 text-white px-2 py-1 rounded'
@@ -74,21 +103,25 @@ export default function BookList() {
                   >
                     View Info
                   </button>
-                  <button
-                    className='bg-blue-500 text-white px-2 py-1 rounded'
-                    onClick={() => navigate(`/create/${b.id}`)}
-                  >
-                    Update
-                  </button>
-                  
-                  <button
-                    className='bg-red-500 text-white px-2 py-1 rounded'
-                    onClick={() => handleDelete(b.id)}
-                  >
-                    Delete
-                  </button>
+                  {isAdmin && (
+                    <>
+                      <button
+                        className='bg-blue-500 text-white px-2 py-1 rounded'
+                        onClick={() => navigate(`/create/${b.id}`)}
+                      >
+                        Update
+                      </button>
+                      
+                      <button
+                        className='bg-red-500 text-white px-2 py-1 rounded'
+                        onClick={() => handleDelete(b.id)}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
-              )}
+              
             </div>
           ))}
         </div>

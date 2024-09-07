@@ -1,41 +1,67 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import useFetch from '../hooks/useFetch';
 import useTheme from '../hooks/useTheme';
 
+async function createBook({ id = "", method = "POST", body, navigate }) {
+    try {
+        const authKey = sessionStorage.getItem('adminKey'); // Retrieve the auth key from sessionStorage
+        if (!authKey) {
+            throw new Error('Authentication key is missing.');
+        }
+
+        const response = await fetch(`http://127.0.0.1:4444/book${id ? `/${id}` : ""}`, {
+            method,
+            headers: {
+                "Auth": authKey
+                // Note: FormData automatically sets the correct Content-Type header
+            },
+            body
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Something went wrong');
+        }
+
+        const result = await response.json();
+        alert(result.message);
+        navigate('/');
+    } catch (error) {
+        console.error('Error:', error);
+        alert(`Failed to save the book: ${error.message}`);
+    }
+}
+
 export default function Create() {
-    let { id } = useParams();  // Get the id from the URL
+    let { id } = useParams();
     let [title, setTitle] = useState('');
     let [author, setAuthor] = useState('');
     let [description, setDescription] = useState('');
-    let [image, setImage] = useState(null);  // State to hold the selected image file
-    let [previewImage, setPreviewImage] = useState('');  // State to hold the preview of the selected image
+    let [image, setImage] = useState(null);
+    let [previewImage, setPreviewImage] = useState('');
     let navigate = useNavigate();
 
-    // UseFetch hooks for API requests
     let { doRequest: fetchBookData, data: fetchedBook } = useFetch(`http://127.0.0.1:4444/book/${id}`, "GET");
+    let { doRequest: fetchAuthorData, data: fetchedAuthor } = useFetch(`http://127.0.0.1:4444/author`, "GET");
 
-    // Fetch book data if editing existing book
     useEffect(() => {
         if (id) {
             fetchBookData();
         }
     }, [id]);
 
-    // Populate form fields with fetched book data
     useEffect(() => {
         if (fetchedBook) {
             setTitle(fetchedBook.title);
             setDescription(fetchedBook.description);
             setAuthor(fetchedBook.author.name);
-            // Set preview image URL if image exists
             if (fetchedBook.path) {
                 setPreviewImage(`http://127.0.0.1:4444${fetchedBook.path}`);
             }
         }
     }, [fetchedBook]);
 
-    // Handle image file selection
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -48,10 +74,8 @@ export default function Create() {
         }
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-
 
         const formData = new FormData();
         formData.append('title', title);
@@ -61,35 +85,9 @@ export default function Create() {
             formData.append('image', image);
         }
 
-        if (id) {
-            // Update existing book
-            fetch(`http://127.0.0.1:4444/book/${id}`, {
-                method: 'PUT',
-                headers: {
-                "Auth": "cb23d25a-1d84-469e-b46c-266884535e50"
-                },
-                body: formData
-            })
-            .then((res)=> res.json())
-            .then((res)=> alert(res.message))
-            .then(() => navigate('/'));
-
-        } else {
-            // Create new book
-            fetch('http://127.0.0.1:4444/book/add', {
-                method: 'POST',
-                headers: {
-                "Auth": "cb23d25a-1d84-469e-b46c-266884535e50"
-                },
-                body: formData
-            })
-            .then((res)=> res.json())
-            .then((res)=> alert(res.message))
-            .then(() => navigate('/'));
-        }
+        await createBook({ id, method: id ? "PUT" : "POST", body: formData, navigate });
     };
 
-    // Theme context
     let { isDark } = useTheme();
 
     return (
@@ -110,7 +108,18 @@ export default function Create() {
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-author">
                             Author
                         </label>
-                        <input value={author} onChange={e => setAuthor(e.target.value)} className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-author" type="text" name="author" placeholder="Book's author" />
+                        <select onChange={e => {
+                            if (e.target.value === "add") {
+                                navigate('/author');
+                            }
+                            setAuthor(e.target.value);
+                        }} className="appearance-none w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-author" name="author" placeholder="Book's author">
+                            <option defaultValue>Choose An Author</option>
+                            {fetchedAuthor && fetchedAuthor.map(author => (
+                                <option key={author.id} value={author.name}>{author.name}</option>
+                            ))}
+                            <option value="add">+ Add</option>
+                        </select>
                     </div>
                 </div>
                 {/* Description */}
@@ -129,9 +138,8 @@ export default function Create() {
                         <label className={`block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2 ${isDark ? 'text-white' : ''}`} htmlFor="grid-image">
                             Book Cover Image
                         </label>
-                        <input onChange={handleImageChange} className={`appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-image" type="file" accept="image/*" `} disabled={id? true : false} />
+                        <input onChange={handleImageChange} className={`appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500`} id="grid-image" type="file" accept="image/*" disabled={id ? true : false} />
                     </div>
-                    {/* Preview Image */}
                     {previewImage && (
                         <div className="w-full px-3 mt-3">
                             <img src={previewImage} alt="Preview" className={`max-w-full h-auto ${id ? 'hidden' : ''}`} />
@@ -147,5 +155,5 @@ export default function Create() {
                 </button>
             </form>
         </div>
-    )
+    );
 }

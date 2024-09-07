@@ -9,7 +9,7 @@ function Register() {
     let navigate = useNavigate();
     useEffect(() => {
         // Check if user is already logged in
-        if (localStorage.getItem('key')) {
+        if (sessionStorage.getItem('key')) {
             alert('You are already logged in');
             navigate('/');
         }
@@ -29,7 +29,7 @@ function Register() {
             role
         }
         console.log(data);
-        await fetch('http://127.0.0.1:4444/user/add'
+        await fetch('http://127.0.0.1:4444/user'
             , {
                 method: 'POST',
                 headers: {
